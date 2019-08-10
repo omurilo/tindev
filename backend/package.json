@@ -1,0 +1,24 @@
+{
+  "name": "Tindev",
+  "version": "1.0.0",
+  "description": "Api do Tinder para desenvolvedores",
+  "main": "src/server.js",
+  "repository": "https://github.com/murilokaos/tindev.git",
+  "author": "Murilo Henrique",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "nodemon src/server.js",
+    "prod": "node src/server.js"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mongoose": "^5.6.9",
+    "socket.io": "^2.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}
