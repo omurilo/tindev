@@ -41,7 +41,7 @@ module.exports = {
 
       return res.json(dev);
     } catch (error) {
-      res.json({
+      res.status(400).json({
         error: "User not exists!"
       });
     }

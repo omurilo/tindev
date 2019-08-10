@@ -14,24 +14,24 @@ module.exports = {
         .json({ error: "Target user of action not exists!" });
     }
 
-    loggedDev.likes.push(targetDev._id);
-
-    await loggedDev.save();
-
-    const itsAMatch = targetDev.likes.includes(user);
+    const itsAMatch = targetDev.likes.includes(loggedDev._id);
 
     if (itsAMatch) {
       const loggedSocket = req.listConnecteds[user];
       const targetSocket = req.listConnecteds[devId];
 
       if (loggedSocket) {
-        req.io.to(loggedDev).emit("match", targetDev);
+        req.io.to(loggedSocket).emit("match", targetDev);
       }
 
       if (targetSocket) {
-        req.io.to(targetDev).emit("match", loggedDev);
+        req.io.to(targetSocket).emit("match", loggedDev);
       }
     }
+
+    loggedDev.likes.push(targetDev._id);
+
+    await loggedDev.save();
 
     return res.json(loggedDev);
   }
