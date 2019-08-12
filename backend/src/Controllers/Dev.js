@@ -22,7 +22,7 @@ module.exports = {
     try {
       const { username: user } = req.body;
 
-      const userExists = await Dev.findOne({ user });
+      const userExists = await Dev.findOne({ user: user.toLowerCase() });
 
       if (userExists) {
         return res.json(userExists);

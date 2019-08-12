@@ -1,78 +1,169 @@
-import React from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { Image, Text, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
+import io from 'socket.io-client';
+import Feather from 'react-native-vector-icons/Feather';
 import {
-  Image,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import Logo from '../../assets/logo.png';
+  Avatar,
+  Cards,
+  Card,
+  Container,
+  Empty,
+  Logo,
+  Footer,
+  Name,
+  Bio,
+  Buttons,
+  Button,
+  Mode,
+  Match,
+  ItsaMatch,
+  MatchAvatar,
+  MatchName,
+  MatchBio,
+  Close,
+} from './styles';
+import api from '../../services/api';
+import logo from '../../assets/logo.png';
+import Like from '../../assets/like.png';
+import Dislike from '../../assets/dislike.png';
+import matchLogo from '../../assets/itsamatch.png';
 
 const Main = props => {
+  const id = props.navigation.getParam('id');
+  const [mode, setMode] = useState(false);
+  const [listDevs, setListDevs] = useState([]);
+  const [itsAMatch, setItsAMatch] = useState(null);
+
+  useEffect(() => {
+    async function getDevs() {
+      const { data } = await api.get('/devs', {
+        headers: {
+          user: id,
+        },
+      });
+
+      setListDevs(data);
+    }
+
+    getDevs();
+  }, [id]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('mode').then(modeItem =>
+      setMode(JSON.parse(modeItem)),
+    );
+  }, []);
+
+  useEffect(() => {
+    const socket = io('http://192.168.1.102:3333', {
+      query: { user: id },
+    });
+
+    socket.on('match', dev => {
+      setItsAMatch(dev);
+    });
+  }, [id]);
+
+  async function handleLogout() {
+    await AsyncStorage.removeItem('user');
+    props.navigation.navigate('Login');
+  }
+
+  async function handleMode() {
+    await AsyncStorage.setItem('mode', JSON.stringify(!mode));
+    setMode(!mode);
+  }
+
+  async function handleLike() {
+    const [user, ...rest] = listDevs;
+    console.log('oi', user);
+    await api.post(`/dev/${user._id}/like`, null, {
+      headers: {
+        user: id,
+      },
+    });
+
+    setListDevs(rest);
+  }
+
+  async function handleDislike() {
+    console.log('oi');
+    const [user, ...rest] = listDevs;
+    await api.post(`/dev/${user._id}/dislike`, null, {
+      headers: {
+        user: id,
+      },
+    });
+
+    setListDevs(rest);
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={() => props.navigation.navigate('Login')}>
-        <Image source={Logo} />
+    <Container mode={mode}>
+      <TouchableOpacity onPress={handleLogout}>
+        <Logo source={logo} />
       </TouchableOpacity>
-      <View styles={styles.cardsContainer}>
-        <View style={styles.card}>
-          <Image
+
+      <Cards>
+        {listDevs.length > 0 ? (
+          listDevs.map((dev, idx) => (
+            <Card
+              mode={mode}
+              key={dev._id}
+              style={{ zIndex: listDevs.length - idx }}
+            >
+              <Avatar
+                source={{
+                  uri: dev.avatar,
+                }}
+              />
+              <Footer mode={mode}>
+                <Name mode={mode}>{dev.name}</Name>
+                <Bio mode={mode} numberOfLines={3}>
+                  {dev.bio}
+                </Bio>
+              </Footer>
+            </Card>
+          ))
+        ) : (
+          <Empty mode={mode}>Acabou :(</Empty>
+        )}
+      </Cards>
+      {listDevs.length > 0 && (
+        <Buttons>
+          <Button mode={mode} onPress={handleDislike}>
+            <Image source={Dislike} />
+          </Button>
+          <Button mode={mode} onPress={handleLike}>
+            <Image source={Like} />
+          </Button>
+        </Buttons>
+      )}
+      <Mode onPress={handleMode}>
+        <Feather
+          name={mode ? 'sun' : 'moon'}
+          size={22}
+          color={mode ? '#d7b335' : '#44475a'}
+        />
+      </Mode>
+      {itsAMatch && (
+        <Match>
+          <ItsaMatch source={matchLogo} />
+          <MatchAvatar
             source={{
-              uri: 'https://avatars0.githubusercontent.com/u/4248081?v=4',
+              uri: itsAMatch.avatar,
             }}
-            style={styles.avatar}
           />
-          <View style={styles.footer}>
-            <Text style={styles.name}>Filipe Deschamps</Text>
-            <Text style={styles.bio}>A nice guy</Text>
-          </View>
-        </View>
-      </View>
-      <View />
-    </SafeAreaView>
+          <MatchName>{itsAMatch.name}</MatchName>
+          <MatchBio>{itsAMatch.bio}</MatchBio>
+          <TouchableOpacity onPress={() => setItsAMatch(null)}>
+            <Close>Fechar</Close>
+          </TouchableOpacity>
+        </Match>
+      )}
+    </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'space-between',
-  },
-  cardsContainer: {
-    flex: 1,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    maxHeight: 500,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    margin: 30,
-    overflow: 'hidden',
-  },
-  avatar: {
-    height: 250,
-    width: 250,
-  },
-  footer: {
-    backgroundColor: '#F2F2F2',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  name: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    color: '#585858',
-  },
-  bio: {
-    color: 'rgba(0, 0, 0, 0.25)',
-    fontSize: 14,
-  },
-});
 
 export default Main;

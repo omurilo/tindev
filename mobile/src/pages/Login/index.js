@@ -1,20 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import { Image, Platform } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
+import Feather from 'react-native-vector-icons/Feather';
+import { Button, Container, Input, Label, Mode } from './styles';
 import api from '../../services/api';
 import Logo from '../../assets/logo.png';
 
 const Login = props => {
   const [user, setUser] = useState(null);
+  const [mode, setMode] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem('user').then(id => {
@@ -24,13 +19,21 @@ const Login = props => {
         });
       }
     });
+
+    AsyncStorage.getItem('mode').then(modeItem =>
+      setMode(JSON.parse(modeItem)),
+    );
   }, []);
+
+  async function handleMode() {
+    await AsyncStorage.setItem('mode', JSON.stringify(!mode));
+    setMode(!mode);
+  }
 
   async function handleLogin() {
     try {
       const { data } = await api.post('/dev', { username: user });
       await AsyncStorage.setItem('user', data._id);
-      console.log(user, data._id);
       props.navigation.navigate('Main', {
         id: data._id,
       });
@@ -40,62 +43,29 @@ const Login = props => {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      enabled={Platform.OS === 'ios'}
-      style={styles.container}
-    >
+    <Container behavior="padding" enabled={Platform.OS === 'ios'} mode={mode}>
       <Image source={Logo} />
-      <TextInput
+      <Input
         value={user}
         autoCapitalize="none"
         autoCorrect={false}
-        style={styles.input}
         onChangeText={username => setUser(username)}
         placeholder="Digite seu usuário no github"
         placeHolderTextColor="#999"
+        mode={mode}
       />
-      <TouchableOpacity onPress={handleLogin} style={styles.button}>
-        <Text style={styles.textButton}>Entrar</Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+      <Button onPress={handleLogin} mode={mode}>
+        <Label mode={mode}>Entrar</Label>
+      </Button>
+      <Mode mode={mode} onPress={handleMode}>
+        <Feather
+          name={mode ? 'sun' : 'moon'}
+          size={22}
+          color={mode ? '#d7b335' : '#44475a'}
+        />
+      </Mode>
+    </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F5F5F5',
-  },
-  input: {
-    height: 46,
-    fontSize: 14,
-    marginTop: 20,
-    color: '#666',
-    borderWidth: 1,
-    borderRadius: 4,
-    borderColor: '#ddd',
-    alignSelf: 'stretch',
-    paddingHorizontal: 15,
-    backgroundColor: '#F2F2F2',
-  },
-  button: {
-    height: 46,
-    marginTop: 10,
-    borderRadius: 4,
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#DF4723',
-  },
-  textButton: {
-    fontSize: 16,
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-});
 
 export default Login;
