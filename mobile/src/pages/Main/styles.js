@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components/native';
+import styled from 'styled-components/native';
 import { StyleSheet, Animated } from 'react-native';
 
 export const Container = styled.SafeAreaView`
@@ -55,7 +55,9 @@ export const Name = styled.Text`
   color: ${props => (props.mode ? '#bd93f9' : '#333')};
 `;
 
-export const Bio = styled.Text`
+export const Bio = styled.Text.attrs({
+  numberOfLines: 3,
+})`
   font-size: 14px;
   color: ${props => (props.mode ? '#6272a4' : '#999')};
   margin-top: 5px;
@@ -68,17 +70,23 @@ export const Buttons = styled.View`
   z-index: 1;
 `;
 
-export const Button = styled.TouchableOpacity`
-  elevation: 1;
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-  margin: 0 20px;
-  align-items: center;
-  background-color: ${props => (props.mode ? '#44475a' : '#FFF')};
-  justify-content: center;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.8);
-`;
+export const Button = styled.TouchableOpacity({
+  elevation: 1,
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  margin: '0 20px',
+  alignItems: 'center',
+  backgroundColor: props => (props.mode ? '#44475a' : '#FFF'),
+  justifyContent: 'center',
+  shadowOffset: {
+    width: 0,
+    height: 2,
+  },
+  shadowRadius: 2,
+  shadowOpacity: 0.8,
+  shadowColor: '#000',
+});
 
 export const Mode = styled.TouchableOpacity`
   position: absolute;
@@ -86,7 +94,7 @@ export const Mode = styled.TouchableOpacity`
   right: 5px;
 `;
 
-export const Match = styled.View({
+export const Match = styled(Animated.View)({
   ...StyleSheet.absoluteFillObject,
   backgroundColor: 'rgba(0, 0, 0, 0.8)',
   justifyContent: 'center',
@@ -94,27 +102,27 @@ export const Match = styled.View({
   zIndex: 999,
 });
 
-export const ItsaMatch = styled.Image`
-  height: 60px;
-  resize-mode: contain;
-`;
+export const ItsaMatch = styled(Animated.Image)({
+  height: 60,
+  resizeMode: 'contain',
+});
 
-export const MatchAvatar = styled.Image`
+export const MatchAvatar = styled(Animated.Image)`
   height: 160px;
   width: 160px;
   border-width: 3px;
-  border-radius: 80px;
+  /* border-radius: 80px; */
   border-color: #fff;
   margin: 30px 0;
 `;
 
-export const MatchName = styled.Text`
+export const MatchName = styled(Animated.Text)`
   color: #fff;
   font-size: 26px;
   font-weight: bold;
 `;
 
-export const MatchBio = styled.Text`
+export const MatchBio = styled(Animated.Text)`
   font-size: 14px;
   margin-top: 10px;
   color: rgba(255, 255, 255, 0.8);
@@ -123,10 +131,30 @@ export const MatchBio = styled.Text`
   padding: 0 30px;
 `;
 
-export const Close = styled.Text`
+export const Close = styled(Animated.Text)`
   font-size: 16px;
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
   margin-top: 30px;
   font-weight: bold;
+`;
+
+export const Tag = styled(Animated.View)`
+  top: 45;
+  z-index: 1;
+  border-radius: 4;
+  border-width: 2;
+  transform: ${props =>
+    props.type === 'like' ? 'rotate(-35deg)' : 'rotate(35deg)'};
+  position: absolute;
+  border-color: ${props => (props.type === 'dislike' ? '#DF4723' : '#00C97A')};
+  right: ${props => (props.type === 'dislike' ? '35px' : 'auto')};
+  left: ${props => (props.type === 'like' ? '35px' : 'auto')};
+`;
+
+export const TagText = styled.Text`
+  color: ${props => (props.type === 'dislike' ? '#DF4723' : '#00C97A')};
+  font-size: 30;
+  font-weight: bold;
+  padding: 0 15px;
 `;

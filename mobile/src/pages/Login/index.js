@@ -7,22 +7,26 @@ import { Button, Container, Input, Label, Mode } from './styles';
 import api from '../../services/api';
 import Logo from '../../assets/logo.png';
 
-const Login = props => {
+const Login = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem('user').then(id => {
-      if (id) {
-        props.navigation.navigate('Main', {
-          id,
-        });
-      }
-    });
+    async function initApp() {
+      await AsyncStorage.getItem('mode').then(modeItem =>
+        setMode(JSON.parse(modeItem)),
+      );
 
-    AsyncStorage.getItem('mode').then(modeItem =>
-      setMode(JSON.parse(modeItem)),
-    );
+      await AsyncStorage.getItem('user').then(id => {
+        if (id) {
+          navigation.navigate('Main', {
+            id,
+          });
+        }
+      });
+    }
+
+    initApp();
   }, []);
 
   async function handleMode() {
@@ -34,7 +38,7 @@ const Login = props => {
     try {
       const { data } = await api.post('/dev', { username: user });
       await AsyncStorage.setItem('user', data._id);
-      props.navigation.navigate('Main', {
+      navigation.navigate('Main', {
         id: data._id,
       });
     } catch (error) {
@@ -53,6 +57,8 @@ const Login = props => {
         placeholder="Digite seu usuário no github"
         placeHolderTextColor="#999"
         mode={mode}
+        returnKeyType="send"
+        onSubmitEditing={handleLogin}
       />
       <Button onPress={handleLogin} mode={mode}>
         <Label mode={mode}>Entrar</Label>

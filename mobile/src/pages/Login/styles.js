@@ -42,4 +42,3 @@ export const Mode = styled.TouchableOpacity({
   right: 5,
   position: 'absolute',
 });
-
