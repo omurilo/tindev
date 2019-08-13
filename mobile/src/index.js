@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react';
+import React from 'react';
 import Routes from './routes';
 
 const App = () => <Routes />;

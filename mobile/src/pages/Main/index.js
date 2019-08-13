@@ -1,5 +1,12 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect } from 'react';
-import { Image, Text, TouchableOpacity } from 'react-native';
+import {
+  Image,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+  PanResponder,
+} from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import io from 'socket.io-client';
 import Feather from 'react-native-vector-icons/Feather';
@@ -28,6 +35,24 @@ import logo from '../../assets/logo.png';
 import Like from '../../assets/like.png';
 import Dislike from '../../assets/dislike.png';
 import matchLogo from '../../assets/itsamatch.png';
+
+const { width } = Dimensions.get('window');
+
+const CardAnimated = ({ mode, dev, style, panResponder }) => (
+  <Card mode={mode} key={dev._id} style={style} {...panResponder.panHandlers}>
+    <Avatar
+      source={{
+        uri: dev.avatar,
+      }}
+    />
+    <Footer mode={mode}>
+      <Name mode={mode}>{dev.name}</Name>
+      <Bio mode={mode} numberOfLines={3}>
+        {dev.bio}
+      </Bio>
+    </Footer>
+  </Card>
+);
 
 const Main = props => {
   const id = props.navigation.getParam('id');
@@ -99,6 +124,38 @@ const Main = props => {
     setListDevs(rest);
   }
 
+  const sliderPosition = new Animated.ValueXY({ x: 0, y: 0 });
+
+  // if (itsAMatch) {
+  //   return false;
+  // }
+  // return true;
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderTerminationRequest: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      sliderPosition.setValue({ x: gestureState.dx, y: gestureState.dy });
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dx > 170) {
+        // handleLike();
+        Animated.spring(sliderPosition, {
+          toValue: { x: width + 35, y: 0 },
+        }).start();
+      } else if (gestureState.dx < -170) {
+        // handleDislike();
+        Animated.spring(sliderPosition, {
+          toValue: { x: -width - 35, y: 0 },
+        }).start();
+      } else {
+        Animated.spring(sliderPosition, {
+          toValue: { x: 0, y: 0 },
+        }).start();
+      }
+    },
+  });
+
   return (
     <Container mode={mode}>
       <TouchableOpacity onPress={handleLogout}>
@@ -108,23 +165,51 @@ const Main = props => {
       <Cards>
         {listDevs.length > 0 ? (
           listDevs.map((dev, idx) => (
-            <Card
+            <CardAnimated
               mode={mode}
-              key={dev._id}
-              style={{ zIndex: listDevs.length - idx }}
-            >
-              <Avatar
-                source={{
-                  uri: dev.avatar,
-                }}
-              />
-              <Footer mode={mode}>
-                <Name mode={mode}>{dev.name}</Name>
-                <Bio mode={mode} numberOfLines={3}>
-                  {dev.bio}
-                </Bio>
-              </Footer>
-            </Card>
+              dev={dev}
+              style={[
+                { zIndex: listDevs.length - idx },
+                {
+                  opacity:
+                    idx > 0
+                      ? idx === 1
+                        ? sliderPosition.x.interpolate({
+                            inputRange: [-width, 0, width],
+                            outputRange: [1, 0, 1],
+                            extrapolate: 'clamp',
+                          })
+                        : 0
+                      : 1,
+                },
+                {
+                  transform:
+                    idx > 0
+                      ? [
+                          {
+                            scale: sliderPosition.x.interpolate({
+                              inputRange: [-width, 0, width],
+                              outputRange: [1, 0.8, 1],
+                              extrapolate: 'clamp',
+                            }),
+                          },
+                        ]
+                      : [
+                          {
+                            translateX: sliderPosition.x,
+                          },
+                          {
+                            rotate: sliderPosition.x.interpolate({
+                              inputRange: [-width, width],
+                              outputRange: ['-20deg', '20deg'],
+                              extrapolate: 'clamp',
+                            }),
+                          },
+                        ],
+                },
+              ]}
+              panResponder={panResponder}
+            />
           ))
         ) : (
           <Empty mode={mode}>Acabou :(</Empty>

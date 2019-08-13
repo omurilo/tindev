@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components/native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Animated } from 'react-native';
 
 export const Container = styled.SafeAreaView`
   flex: 1;
@@ -26,7 +26,7 @@ export const Cards = styled.View`
   max-height: 500px;
 `;
 
-export const Card = styled.View`
+export const Card = styled(Animated.View)`
   top: 0;
   left: 0;
   right: 0;
